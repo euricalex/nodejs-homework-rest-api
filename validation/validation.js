@@ -21,6 +21,7 @@ const ValidationSchema = Joi.object({
       Joi.string().pattern(/^\d{3}-\d{7}$/),
     )
     .required(),
+
 });
 
 const PatchSchema = Joi.object({
@@ -42,6 +43,7 @@ const PatchSchema = Joi.object({
     Joi.string().pattern(/^\d{3} \d{7}$/),
     Joi.string().pattern(/^\d{3}-\d{7}$/),
   ),
+  favorite: Joi.boolean(),
 });
 
 module.exports = {

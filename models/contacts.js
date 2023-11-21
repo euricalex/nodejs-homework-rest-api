@@ -1,58 +1,66 @@
-const fs = require("node:fs/promises");
-const path = require("node:path");
-const crypto = require("node:crypto");
-const contactsPath = path.join(__dirname, "contacts.json");
+require("dotenv").config();
+const mongoose = require("mongoose");
+const { Schema } = mongoose;
+
+const contactSchema = new Schema({
+  name: {
+    type: String,
+    required: [true, "Set name for contact"],
+  },
+  email: {
+    type: String,
+  },
+  phone: {
+    type: String,
+  },
+  favorite: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const Contact = mongoose.model("Contact", contactSchema);
 
 const listContacts = async () => {
-  const contacts = await fs.readFile(contactsPath, {encoding: "UTF-8"});
-    return JSON.parse(contacts);
-  
-}
-
-const getContactById = async (contactId) => {
-const contacts = await listContacts();
-const contact = contacts.find((contact) => contact.id === contactId);
-return contact || null;
-}
-
-const removeContact = async (contactId) => {
-  const contacts = await listContacts();
-  const contact = contacts.findIndex((contact) => contact.id === contactId);
-  if(contact === -1) {
-return null;
-  }
-  const removedContact = contacts.splice(contact, 1)[0];
-  await fs.writeFile(contactsPath,  JSON.stringify(contacts, null, 2), {
-    encoding: "UTF-8"
-  });
-  return removedContact;
-
-}
-
-const addContact = async (body) => {
-  const contacts = await listContacts();
-  const newContact = {id: crypto.randomUUID(), ...body};
-  contacts.push(newContact);
-  await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-  return newContact;
-}
-const updateContact = async (contactId, body) => {
-  const contacts = await listContacts();
-  const contact = contacts.findIndex((contact) => contact.id === contactId);
-  if (contact === -1) {
-    return null;
-  }
-
-  contacts[contact] = { id: contactId, ...body };
-
-  await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-  return contacts[contact];
+  return Contact.find();
 };
 
+const getContactById = async (contactId) => {
+  return Contact.findById(contactId);
+};
+
+const removeContact = async (contactId) => {
+  const removedContact = await Contact.findOneAndDelete({ _id: contactId });
+  return removedContact ? { message: 'Contact removed successfully' } : null;
+};
+
+
+const addContact = async (body) => {
+  return Contact.create(body);
+};
+
+const updateContact = async (contactId, body) => {
+  return Contact.findByIdAndUpdate(contactId, body, { new: true });
+};
+const updateStatusContact = async(contactId, body) => {
+  return Contact.findByIdAndUpdate(contactId, body, { new: true });
+};
+mongoose.connect(process.env.MONGODB_URI);
+
+mongoose.connection.on("connected", () => {
+  console.log("Database connection successful");
+});
+
+// Обробка помилок підключення
+mongoose.connection.on("error", (err) => {
+  console.error("Database connection error:", err);
+  process.exit(1);
+});
 module.exports = {
   listContacts,
   getContactById,
   removeContact,
   addContact,
   updateContact,
-}
+  updateStatusContact
+};

@@ -83,4 +83,30 @@ router.put('/:contactId', async (req, res, next) => {
   }
 });
 
+router.patch('/:contactId/favorite', async (req, res, next) => {
+try {
+const {contactId} = req.params;
+const {favorite} = req.body;
+const { error } = PatchSchema.validate({ favorite });
+if (favorite === undefined) {
+  throw  HttpError(400, 'missing field favorite');
+}
+
+if (error) {
+  throw HttpError(400, error.details[0].message);
+}
+
+// Виклик функції updateStatusContact
+const updatedContact = await method.updateStatusContact(contactId, { favorite });
+
+if (!updatedContact) {
+  throw  HttpError(404, 'Not found');
+}
+
+res.json(updatedContact);
+} catch(error) {
+  next(error);
+}
+})
+
 module.exports = router;
