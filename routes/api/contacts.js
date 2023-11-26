@@ -2,10 +2,11 @@ const express = require("express");
 const method = require("../../models/contacts");
 const { ValidationSchema, PatchSchema } = require("../../validation/validation");
 const HttpError = require("../../validation/HttpError");
-
+const  { validateContactId } = require("../../middlewars");
 const router = express.Router();
 
-router.get('/', async (req, res, next) => {
+
+router.get('/',  async (req, res, next) => {
   try {
     const answer = await method.listContacts();
     res.json(answer);
@@ -14,7 +15,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.get('/:contactId', async (req, res, next) => {
+router.get('/:contactId', validateContactId,  async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const answer = await method.getContactById(contactId);
@@ -27,7 +28,7 @@ router.get('/:contactId', async (req, res, next) => {
   }
 });
 
-router.post('/', async (req, res, next) => {
+router.post('/',  async (req, res, next) => {
   
     try {
       const { name, email, phone } = req.body;
@@ -47,7 +48,7 @@ router.post('/', async (req, res, next) => {
   });
   
 
-router.delete('/:contactId', async (req, res, next) => {
+router.delete('/:contactId', validateContactId,  async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const answer = await method.removeContact(contactId);
@@ -61,12 +62,12 @@ router.delete('/:contactId', async (req, res, next) => {
   }
 });
 
-router.put('/:contactId', async (req, res, next) => {
+router.put('/:contactId', validateContactId,  async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const { name, email, phone } = req.body;
 
-    const { error } = PatchSchema.validate({ name, email, phone });
+    const { error } = ValidationSchema.validate({ name, email, phone });
 
     if (error) {
       throw  HttpError(400, error.details[0].message);
@@ -83,7 +84,7 @@ router.put('/:contactId', async (req, res, next) => {
   }
 });
 
-router.patch('/:contactId/favorite', async (req, res, next) => {
+router.patch('/:contactId/favorite', validateContactId,  async (req, res, next) => {
 try {
 const {contactId} = req.params;
 const {favorite} = req.body;
