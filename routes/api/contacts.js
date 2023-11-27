@@ -1,9 +1,10 @@
 const express = require("express");
+const router = express.Router();
 const method = require("../../models/contacts");
 const { ValidationSchema, PatchSchema } = require("../../validation/validation");
 const HttpError = require("../../validation/HttpError");
 const  { validateContactId } = require("../../middlewars");
-const router = express.Router();
+
 
 
 router.get('/',  async (req, res, next) => {
