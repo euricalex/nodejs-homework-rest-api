@@ -7,7 +7,9 @@ const  { validateContactId } = require("../../middlewars");
 
 
 
+
 router.get('/',  async (req, res, next) => {
+  console.log({user: req.user});
   try {
     const answer = await method.listContacts();
     res.json(answer);
@@ -110,5 +112,6 @@ res.json(updatedContact);
   next(error);
 }
 })
+
 
 module.exports = router;

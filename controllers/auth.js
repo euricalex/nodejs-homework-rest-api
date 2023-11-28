@@ -4,6 +4,7 @@ const User = require("../models/user");
 const {registrationSchema} = require("../validation/validation");
 
 
+
 async function register(req, res, next) {
     const {password, email} = req.body;
     try {
@@ -46,10 +47,63 @@ const {password, email} = req.body;
         }
     
    const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: "7d"});
+
+   await User.findByIdAndUpdate(user._id, {token}).exec();
+
         res.send({token});
     } catch (error) {
         next(error);
     }
 
 }
-module.exports = { register, login };
+
+async function logout (req, res, next) {
+    try {
+        await User.findByIdAndUpdate(req.user.id, {token: null});
+res.status(204).end();
+    } catch(error) {
+        next(error)
+    }
+}
+
+// async function refreshToken(req, res, next) {
+//         const refreshToken = req.body.refreshToken;
+      
+//         if (!refreshToken) {
+//           return res.status(400).json({ message: 'Refresh token is required' });
+//         }
+      
+//         try {
+//           const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+      
+         
+//           const accessToken = jwt.sign({ id: decoded.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+      
+//           // Отправка нового access token в ответе
+//           res.json({ accessToken });
+//         } catch (error) {
+//           // В случае ошибки валидации refreshToken
+//           return res.status(401).json({ message: 'Invalid refresh token' });
+//         }
+//       }
+
+async function current(req, res, next) {
+    try {
+    
+        const user = await User.findById(req.user.id);
+        
+        if (!user) {
+            return res.status(401).json({ message: "Not authorized" });
+        }
+
+        res.status(200).json({
+            email: user.email,
+            subscription: user.subscription
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+    
+
+module.exports = { register, login, logout, current };
