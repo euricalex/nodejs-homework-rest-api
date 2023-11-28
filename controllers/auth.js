@@ -1,6 +1,55 @@
-// controllers/auth.js
-function register(req, res, next) {
-    res.send("OK");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
+const {registrationSchema} = require("../validation/validation");
+
+
+async function register(req, res, next) {
+    const {password, email} = req.body;
+    try {
+        const { error } = registrationSchema.validate({ password, email });
+  
+        if (error) {
+          return res.status(400).json({ message: "Помилка від Joi або іншої бібліотеки валідації" });
+        }
+        const user = await User.findOne({email}).exec();
+        if(user) {
+            return res.status(409).send({message: "Email in use"});
+        }
+        const passwordHash = await bcrypt.hash(password, 10);
+        await User.create({password: passwordHash, email});
+        res.status(201).send({message: "Registartion successfuly"});
+    } catch (error) {
+       next(error);
+    } 
 }
 
-module.exports = { register };
+
+async function login (req, res, next) {
+const {password, email} = req.body;
+  
+    try {
+        const { error } = registrationSchema.validate({ password, email });
+  
+        if (error) {
+          return res.status(400).json({ message: "Помилка від Joi або іншої бібліотеки валідації" });
+        }
+
+        const user = await User.findOne({email}).exec();
+        if(user === null) {
+            return res.status(401).send({message: "Email or password is wrong"});
+        }
+
+        const loginHash = await bcrypt.compare(password, user.password);
+        if(loginHash === false) {
+            return res.status(401).send({message: "Email or password is wrong"});
+        }
+    
+   const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: "7d"});
+        res.send({token});
+    } catch (error) {
+        next(error);
+    }
+
+}
+module.exports = { register, login };
