@@ -46,7 +46,7 @@ const {password, email} = req.body;
             return res.status(401).send({message: "Email or password is wrong"});
         }
     
-   const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: "7d"});
+   const token = jwt.sign({id: user._id}, process.env.JWT_SECRET);
 
    await User.findByIdAndUpdate(user._id, {token}).exec();
 
@@ -59,33 +59,15 @@ const {password, email} = req.body;
 
 async function logout (req, res, next) {
     try {
-        await User.findByIdAndUpdate(req.user.id, {token: null});
-res.status(204).end();
+            await User.findByIdAndUpdate(req.user.id, {token: null});
+            res.status(204).end();
+     
     } catch(error) {
-        next(error)
+        return next({ status: 401, message: 'Not authorized' });
     }
 }
 
-// async function refreshToken(req, res, next) {
-//         const refreshToken = req.body.refreshToken;
-      
-//         if (!refreshToken) {
-//           return res.status(400).json({ message: 'Refresh token is required' });
-//         }
-      
-//         try {
-//           const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-      
-         
-//           const accessToken = jwt.sign({ id: decoded.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-      
-//           // Отправка нового access token в ответе
-//           res.json({ accessToken });
-//         } catch (error) {
-//           // В случае ошибки валидации refreshToken
-//           return res.status(401).json({ message: 'Invalid refresh token' });
-//         }
-//       }
+
 
 async function current(req, res, next) {
     try {

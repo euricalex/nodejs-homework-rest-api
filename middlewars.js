@@ -15,19 +15,19 @@ const validateContactId = (req, res, next) => {
   function auth (req, res, next) {
     const authHeader = req.headers.authorization;
     if(authHeader === "undefined") {
-      return res.status(401).send({message: "Not authorizedddd"});      
+      return res.status(401).send({message: "Not authorized"});      
     }
     
 
 const [bearer, token] = authHeader.split(" ", 2);
 if(bearer !== "Bearer") {
-   return res.status(401).send({message: "Not authorizedddd"});
+   return res.status(401).send({message: "Not authorized"});
 }
 
 jwt.verify(token, process.env.JWT_SECRET, async (error, decode) => {
   if (error) {
     console.error("JWT verification error:", error);
-    return res.status(401).send({ message: "Not authorizedddd" });
+    return res.status(401).send({ message: "Not authorized" });
   }
   try {
     req.user = decode;
@@ -35,10 +35,7 @@ jwt.verify(token, process.env.JWT_SECRET, async (error, decode) => {
     if(user === null) {
       return res.status(401).send({ message: "Not authorized" });
     }
-    if(user.token === token) {
-      return res.status(401).send({ message: "Not authorized" });
-      
-    }
+  
     req.user = {id: user._id}
     next();
   } catch(error) {
