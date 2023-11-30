@@ -17,7 +17,10 @@ const userSchema = new mongoose.Schema({
       token: {
       type: String,
       default: null,  
-      } 
+      },
+       avatarURL: String,
+       
+      
 });
 module.exports = mongoose.model("User", userSchema);
 

@@ -1,5 +1,8 @@
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
+const multer = require("multer");
+const crypto =  require("node:crypto");
+const path = require("node:path");
 const User = require("./models/user");
 const validateContactId = (req, res, next) => {
     const { contactId } = req.params;
@@ -27,7 +30,7 @@ if(bearer !== "Bearer") {
 jwt.verify(token, process.env.JWT_SECRET, async (error, decode) => {
   if (error) {
     console.error("JWT verification error:", error);
-    return res.status(401).send({ message: "Not authorized" });
+    return res.status(401).send({ message: "Not authorizedyyy" });
   }
   try {
     req.user = decode;
@@ -41,13 +44,26 @@ jwt.verify(token, process.env.JWT_SECRET, async (error, decode) => {
   } catch(error) {
     next(error)
   }
-  
 });
 
   }
 
 
-  module.exports = {
-    validateContactId,
-    auth
-  }
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        console.log(file);
+        cb(null, path.join(__dirname,  "./tmp"));
+    },
+   filename: (req, file, cb) => {
+    console.log(file);
+
+    const extname = path.extname(file.originalname);
+   const basename = path.basename(file.originalname, extname);
+const suffix = crypto.randomUUID()
+cb(null, `${basename}-${suffix}${extname}`);
+   },
+});
+const upload = multer({storage});
+
+
+  module.exports = { validateContactId, auth, upload }
