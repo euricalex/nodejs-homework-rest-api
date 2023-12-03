@@ -9,6 +9,7 @@ router.post("/register", jsonParser, AuthController.register);
 router.post("/login", jsonParser, AuthController.login);
 router.post("/logout", auth, AuthController.logout );
 router.post("/current", auth, AuthController.current);
+router.get("/avatar",  userController.getAvatar);
 router.patch("/avatar", upload.single("avatar"), userController.uploadAvatar);
 
 module.exports = router;

@@ -15,38 +15,41 @@ const validateContactId = (req, res, next) => {
     next();
   };
 
-  function auth (req, res, next) {
+  function auth(req, res, next) {
     const authHeader = req.headers.authorization;
-    if(authHeader === "undefined") {
-      return res.status(401).send({message: "Not authorized"});      
-    }
-    
-
-const [bearer, token] = authHeader.split(" ", 2);
-if(bearer !== "Bearer") {
-   return res.status(401).send({message: "Not authorized"});
-}
-
-jwt.verify(token, process.env.JWT_SECRET, async (error, decode) => {
-  if (error) {
-    console.error("JWT verification error:", error);
-    return res.status(401).send({ message: "Not authorizedyyy" });
-  }
-  try {
-    req.user = decode;
-    const user = await User.findById(decode.id).exec();
-    if(user === null) {
-      return res.status(401).send({ message: "Not authorized" });
+  
+    if (!authHeader || typeof authHeader !== 'string') {
+      return res.status(401).send({ message: 'Not authorized' });
     }
   
-    req.user = {id: user._id}
-    next();
-  } catch(error) {
-    next(error)
+    const [bearer, token] = authHeader.split(" ", 2);
+  
+    if (bearer !== "Bearer") {
+      return res.status(401).send({ message: 'Not authorized' });
+    }
+  
+    jwt.verify(token, process.env.JWT_SECRET, async (error, decode) => {
+      if (error) {
+        console.error("JWT verification error:", error);
+        return res.status(401).send({ message: "Not authorized" });
+      }
+  
+      try {
+        req.user = decode;
+        const user = await User.findById(decode.id).exec();
+  
+        if (user === null) {
+          return res.status(401).send({ message: "Not authorized" });
+        }
+  
+        req.user = { id: user._id };
+        next();
+      } catch (error) {
+        next(error);
+      }
+    });
   }
-});
-
-  }
+  
 
 
 const storage = multer.diskStorage({
@@ -66,4 +69,4 @@ cb(null, `${basename}-${suffix}${extname}`);
 const upload = multer({storage});
 
 
-  module.exports = { validateContactId, auth, upload }
+  module.exports = { validateContactId, auth, upload };

@@ -1,7 +1,9 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const gravatar = require("gravatar");
+const gravatar = require('gravatar');
+const Jimp = require("jimp");
 const User = require("../models/user");
+
 const {registrationSchema} = require("../validation/validation");
 
 
@@ -9,18 +11,21 @@ const {registrationSchema} = require("../validation/validation");
 async function register(req, res, next) {
     const {password, email} = req.body;
     try {
-        const { error } = registrationSchema.validate({ password, email });
+        const { error } = ({ password, email });
   
         if (error) {
           return res.status(400).json({ message: "Помилка від Joi або іншої бібліотеки валідації" });
         }
-        const avatarURL = gravatar.url(email, { s: '200', r: 'pg', d: 'mm' });
         const user = await User.findOne({email}).exec();
         if(user) {
             return res.status(409).send({message: "Email in use"});
         }
+        const avatarURL = gravatar.url(email, { s: '200', r: 'pg', d: 'mm' });
         const passwordHash = await bcrypt.hash(password, 10);
         await User.create({password: passwordHash, email, avatarURL});
+        await Jimp.read(avatarURL)
+            .then(image => image.cover(250, 250)); 
+          
         res.status(201).send({message: "Registartion successfuly"});
     } catch (error) {
        next(error);
