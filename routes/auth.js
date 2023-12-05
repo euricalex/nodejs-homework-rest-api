@@ -11,5 +11,6 @@ router.post("/logout", auth, AuthController.logout );
 router.post("/current", auth, AuthController.current);
 router.get("/avatar",  userController.getAvatar);
 router.patch("/avatar", upload.single("avatar"), userController.uploadAvatar);
+router.get("/verify/:token", AuthController.verify )
 
 module.exports = router;

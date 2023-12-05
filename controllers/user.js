@@ -4,6 +4,10 @@ const User = require("../models/user");
 
 async function uploadAvatar(req, res, next) {
     try {
+        if (!req.file) {
+            return res.status(400).send({message: "File not attached or in an invalid format"});
+
+        }
         await fs.rename(req.file.path, path.join(__dirname, "../public/avatars", req.file.filename ) );
 
      
@@ -22,6 +26,7 @@ async function uploadAvatar(req, res, next) {
 
 async function getAvatar (req, res, next) {
     try {
+      
 const user = await User.findById(req.user.id).exec();
 if(user === null) {
     return res.status(404).send({message: "Not Found"}); 

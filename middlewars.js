@@ -41,6 +41,9 @@ const validateContactId = (req, res, next) => {
         if (user === null) {
           return res.status(401).send({ message: "Not authorized" });
         }
+        if(user.verify !== true) {
+          return res.status(401).send({message: "Your account is not verified"});
+        }
   
         req.user = { id: user._id };
         next();

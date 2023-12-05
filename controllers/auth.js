@@ -1,8 +1,10 @@
 const bcrypt = require("bcrypt");
+const crypto = require("node:crypto");
 const jwt = require("jsonwebtoken");
 const gravatar = require('gravatar');
 const Jimp = require("jimp");
 const User = require("../models/user");
+const sendEmail = require("../helpers/sendEmail");
 
 const {registrationSchema} = require("../validation/validation");
 
@@ -22,7 +24,16 @@ async function register(req, res, next) {
         }
         const avatarURL = gravatar.url(email, { s: '200', r: 'pg', d: 'mm' });
         const passwordHash = await bcrypt.hash(password, 10);
-        await User.create({password: passwordHash, email, avatarURL});
+        const verificationToken = crypto.randomUUID();
+        await sendEmail({
+            to: email,
+            subject: "Welcome to Users",
+            html: `To confirm your registartion please click on <a href="http://localhost:3000/api/users/verify/${verificationToken}">link<a/>`,
+            text: `To confirm your registartion please open the link http://localhost:3000/api/users/verify/${verificationToken}`
+        })
+
+        await User.create({password: passwordHash, email,  avatarURL, verificationToken});
+
         await Jimp.read(avatarURL)
             .then(image => image.cover(250, 250)); 
           
@@ -51,6 +62,9 @@ const {password, email} = req.body;
         const loginHash = await bcrypt.compare(password, user.password);
         if(loginHash === false) {
             return res.status(401).send({message: "Email or password is wrong"});
+        }
+        if(user.verify !== true) {
+            return res.status(401).send({message: "Your account is not verified"});
         }
     
    const token = jwt.sign({id: user._id}, process.env.JWT_SECRET);
@@ -93,6 +107,20 @@ async function current(req, res, next) {
         next(error);
     }
 }
+
+async function verify (req, res, next) {
+const {token} = req.params;
+try {
+const user = await User.findOne({verificationToken: token}).exec();
+if (user === null) {
+    return res.status(404).send({message: "User Not Found"});
+}
+await User.findByIdAndUpdate(user._id, {verify: true, verificationToken: null}).exec();
+res.send({message: "Verification successful"});
+} catch(error) {
+    next(error)
+}
+}
     
 
-module.exports = { register, login, logout, current };
+module.exports = { register, login, logout, current, verify };
