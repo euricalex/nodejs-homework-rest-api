@@ -1,10 +1,10 @@
 const bcrypt = require("bcrypt");
-const crypto = require("node:crypto");
+
 const jwt = require("jsonwebtoken");
 const gravatar = require('gravatar');
 const Jimp = require("jimp");
 const User = require("../models/user");
-const sendEmail = require("../helpers/sendEmail");
+
 
 const {registrationSchema} = require("../validation/validation");
 
@@ -24,15 +24,9 @@ async function register(req, res, next) {
         }
         const avatarURL = gravatar.url(email, { s: '200', r: 'pg', d: 'mm' });
         const passwordHash = await bcrypt.hash(password, 10);
-        const verificationToken = crypto.randomUUID();
-        await sendEmail({
-            to: email,
-            subject: "Welcome to Users",
-            html: `To confirm your registartion please click on <a href="http://localhost:3000/api/users/verify/${verificationToken}">link<a/>`,
-            text: `To confirm your registartion please open the link http://localhost:3000/api/users/verify/${verificationToken}`
-        })
+       
 
-        await User.create({password: passwordHash, email,  avatarURL, verificationToken});
+        await User.create({password: passwordHash, email,  avatarURL});
 
         await Jimp.read(avatarURL)
             .then(image => image.cover(250, 250)); 
@@ -108,19 +102,7 @@ async function current(req, res, next) {
     }
 }
 
-async function verify (req, res, next) {
-const {token} = req.params;
-try {
-const user = await User.findOne({verificationToken: token}).exec();
-if (user === null) {
-    return res.status(404).send({message: "User Not Found"});
-}
-await User.findByIdAndUpdate(user._id, {verify: true, verificationToken: null}).exec();
-res.send({message: "Verification successful"});
-} catch(error) {
-    next(error)
-}
-}
+
     
 
-module.exports = { register, login, logout, current, verify };
+module.exports = { register, login, logout, current };
