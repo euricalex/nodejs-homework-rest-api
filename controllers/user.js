@@ -6,7 +6,6 @@ async function uploadAvatar(req, res, next) {
     try {
         if (!req.file) {
             return res.status(400).send({message: "File not attached or in an invalid format"});
-
         }
         await fs.rename(req.file.path, path.join(__dirname, "../public/avatars", req.file.filename ) );
 
